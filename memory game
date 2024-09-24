@@ -1,0 +1,106 @@
+int cols = 4, rows = 4;
+int cellSize = 100;
+int[][] grid = new int[rows][cols];
+String[] linePatterns = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII"};
+boolean[][] revealed = new boolean[rows][cols];
+
+// Additional variables for match-checking
+int[] selected = {-1, -1, -1, -1};
+boolean checkingMatch = false;
+
+void setup() {
+  size(400, 400);
+  initializeGrid();
+}
+
+void initializeGrid() {
+  ArrayList<Integer> values = new ArrayList<Integer>();
+  for (int i = 0; i < 8; i++) {
+    values.add(i);
+    values.add(i); // Create pairs
+  }
+  values = shuffleArray(values);
+  
+  int index = 0;
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      grid[i][j] = values.get(index);
+      index++;
+    }
+  }
+}
+
+void draw() {
+  background(255);
+  drawGrid();
+  
+  // Check for match after a brief delay
+  if (checkingMatch) {
+    delay(500);
+    checkMatch();
+    checkingMatch = false;
+  }
+}
+
+void drawGrid() {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      int x = j * cellSize;
+      int y = i * cellSize;
+      
+      if (revealed[i][j]) {
+        fill(0);
+        textSize(32);
+        textAlign(CENTER, CENTER);
+        String pattern = linePatterns[grid[i][j]];
+        text(pattern, x + cellSize / 2, y + cellSize / 2);
+      } else {
+        fill(200);
+        rect(x, y, cellSize, cellSize);
+      }
+    }
+  }
+}
+
+void mousePressed() {
+  int cardX = mouseX / cellSize;
+  int cardY = mouseY / cellSize;
+
+  if (cardX >= 0 && cardX < cols && cardY >= 0 && cardY < rows && !revealed[cardY][cardX]) {
+    revealed[cardY][cardX] = true;
+    
+    // Store the selected card coordinates
+    if (selected[0] == -1) {
+      selected[0] = cardY;
+      selected[1] = cardX;
+    } else {
+      selected[2] = cardY;
+      selected[3] = cardX;
+      checkingMatch = true; // Trigger match check
+    }
+  }
+}
+
+void checkMatch() {
+  int x1 = selected[1], y1 = selected[0];
+  int x2 = selected[3], y2 = selected[2];
+
+  // Check if the selected cards do not match
+  if (grid[y1][x1] != grid[y2][x2]) {
+    revealed[y1][x1] = false; // Hide the first card
+    revealed[y2][x2] = false; // Hide the second card
+  }
+  
+  // Reset selected cards
+  selected[0] = selected[1] = selected[2] = selected[3] = -1;
+}
+
+ArrayList<Integer> shuffleArray(ArrayList<Integer> array) {
+  for (int i = array.size() - 1; i > 0; i--) {
+    int index = (int) random(i + 1);
+    Integer temp = array.get(index);
+    array.set(index, array.get(i));
+    array.set(i, temp);
+  }
+  return array;
+}
